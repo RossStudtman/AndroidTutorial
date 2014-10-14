@@ -1,0 +1,2995 @@
+Author: Ross Studtman
+
+Tutorial: John Purcell's "Learn Android 4.0 Programming in Java" 
+John's website: CaveOfProgramming.com
+Also available at Udemy: https://www.udemy.com/u/johnpurcell/
+
+Giant Note: 
+
+	With some of my other notes	on Github, like the JSP notes, my intent was to
+	create a set of notes that were outstanding for me and for others. 
+	
+	These notes are being transcribed from my set of written notes.
+	This set of notes, given their transcribing	nature, I wouldn't say this
+	is an outstanding set of notes. 
+	
+	Video 10 has a ton of extra information regarding input/output streams.
+	
+VIDEO #5 
+
+	XML basics.
+	Ctrl + space in Eclipse reveals name-value pairs for a view.
+	
+		code: android:gravity="top"
+		
+VIDEO #6
+
+	ViewGroup: has a dozen or so subclasses: RelativeLayout, LinearLayout, etc.
+	
+		Orientation: horizontal or vertical
+		Layout_weight
+		
+VIDEO #7
+
+	View id: id="@+id/name_of_id"	--> the "+" adds this ID to the R.Java file
+	
+	
+	R.java file:
+	
+		public final class R{
+		
+			public static final class id{
+			
+				public static final int name_of_id = 0x7f4...
+			}
+			
+			...~...
+		}
+		
+	onCreate(Bundle savedInstanceState){
+		
+		super...~...
+		setContentView(R.layout.activity_main);
+		addSaveButtonListener();
+	}
+	
+	private void addSaveButtonListener(){
+		
+		Button save = (Button) findViewById(R.id.name_of_id)
+		
+		save.setOnClickListener( new View.OnClickListener(){
+		
+			public void onClick(View button){
+			
+			...~...
+		...~...
+	...~...
+	
+VIDEO #8
+
+	Debug logging
+	
+		Log.d("tag", "my log message")
+		
+	AndroidManifest.xml --> permissions tab, set debuggable to true.
+	
+	Dalvic Debug Monitor Service (DDMS) --> LogCat shows debug messages.
+	
+	Upper right hand corner of Eclipse IDE --> a Perspectives button; DDMS is a perspective.
+	
+	 
+	 
+VIDEO #9: Write to a file
+
+	EditText --> use max_length to rein in crazy input.
+	
+	EditText editText = (EditText)findViewById(R.id.edit_text);
+	
+	String text = editText.getText().toString();
+	
+	// Save text to file.
+	
+	FileOutputStream fos = openFileOutput("myFile.text, context.MODE_PRIVATE);
+	
+	fos.write(text.getBytes());
+	
+	fos.close();
+	
+	
+	
+VIDEO #10: Read From File
+
+
+	ABSTRACT CLASS: InputStream --> Reads data one byte at a time; one byte (int value 0 - 255) is returned at a time.
+	
+		CONCRETE SUBCLASSES:
+		
+			FileInputStream: An input stream that reads bytes from a file.
+			
+			FilterInputStream: wraps in InputStream and transforms the data while it is being read.
+			
+				Subclasses:
+				
+					BufferedInputStream: wraps an InputStream and buffers; typically good to use.
+					
+						BufferedInputStream bis = new BufferedInputStream( new FileInputStream("file.dat"));
+					
+					DataInputStream: wraps an InputStream and reads big-endian data.
+					
+						Things that can be read with this: byte; short; int; float; long; double; byte strings; strings encoded in modifed UTF-8.
+						
+						Typically used on data that has been saved using DataOutputStream.
+						
+						Example:
+						
+							DataOutputStream output = new DataOutputStream( new BufferedOutputStream( new FileOutputStream("temp.dat");
+							
+							Say I'm writing a person object that has: name, age, and oddity:
+							
+								output.writeUTF("Ross");
+								output.writeInt(45);
+								output.writeDouble(8.6);
+								
+								iterate to next object in collection, write again:
+								
+								output.writeUTF("Lebowski");
+								output.writeInt(42);
+								output.WriteDouble(9.2);
+								
+								I can then iterate over a collection of these objects and write the details of each object to a file named anything I like: "peeps.oddPeople";
+									
+								When I go to read the file I have to use a DataInputStream to read the byte file and I HAVE TO read the data types in the same
+								order I layed them down, that is, UTF comes first, then int, then double. And each grouping of these three:
+								
+									UTF, int, double
+									
+								represents a person object. So iterate over the incoming data stream bytes and reconstitute the objects:
+								
+										// Create DataInputStream
+										File theSavedFile = new File("peeps.oddPeople");			
+										input = new DataInputStream(new BufferedInputStream(new FileInputStream(theSavedFile)));
+										
+										// How many bytes are in this file? Used in for-loop as upper iteration limit.
+										long bytes = theSavedFile.length();
+										
+										// Reconstitute objects & print				
+										for(long counter = 0 ; counter < bytes; counter++ ){  // EOFException thrown before 'counter' ever equals 'bytes'.
+											
+											String name = input.readUTF();
+											int age = input.readInt();
+											double oddity = input.readDouble();
+											
+											// Create and print new Peep object.
+											System.out.println(new Peeps(name, age, oddity));
+										}
+									
+							TO SEE MY FULL, WORKING CODE, EXAMPLE OF THIS VISIT Stackoverflow:
+							
+								http://stackoverflow.com/questions/25511536/datainputstream-vs-inputstreamreader-trying-to-conceptually-understand-the-two/25533055#25533055
+							
+					
+					etc.
+					
+			ObjectInputStream: a special InputStream that can deserialize Java objects and primitive data types. 
+			
+				Typically used on data that has been saved using ObjectOutputStream.
+				
+			StringBufferInputStream: special InputStream that reads byts from a String in sequence. 
+			
+			etc.
+			
+			
+	ABSTRACT CLASS: OutputStream ----> analogous to InputStream class, with analogous concrete sublcasses.
+		
+		
+		
+	ABSTRACT CLASS: Reader --> Reads data one char at a time; one char (int value 0 - 65,535; which is the maximum value of 2 bytes) from a source in a character-wise manner.
+					((You might think Reader always reads 2 bytes of data a time, since char values are 0 - 65,535, or two bytes (16 bits) worth of data.
+					  But, the actual byte amount read by a Reader depends on the encoding used on the text file. I think UTF-8 tries to generally use 1 byte
+					  for normal ASCII characters and 2 bytes if necessary...but I've forgotten exactly; but you get the gist.))
+	
+		CONCRETE SUBCLASSES:
+		
+			BufferedReader: wraps an existing Reader and bufferes the input.
+			
+				BufferedReader br = new BufferedReader( new FileReader("file.dat"));
+				
+				--> BufferedReader has the method readLine() in it.
+				
+			FilterReader: wraps an existing Reader and transofrms data while being read.
+			
+			InputStreamReader: turns a byte stream into a character stream. Data read from source input stream is convereted into characters.
+			
+				FileReader: Special Reader that reads from a file in the file system. A FileReader is often wrapped by a BufferedReader.
+			
+			etc.
+		
+	
+	ABSTRACT CLASS: Writer ----> analogous to the Reader class, with analogous concrete sublcasses. 
+
+		
+	WANT TO READ CHARACTERS FROM YOUR INPUT STREAM?
+	
+		--> Use InputStreamReader to convert an InputStream into a character stream.
+		
+			Reader reader = new InputStreamReader( inputStream, "Character_Encoding_Instructions"**);
+			
+				**like "UTF-8"
+			
+		--> Usually wrap an InputStream with a BufferedInputStream.
+		
+		
+			QUESTION:
+		
+			// Buffer InputStream
+			Reader reader = new InputStreamReader( new BufferedInputStream(inputStream, bufferSize), "UTF-8");
+			
+			OR,
+			
+			// Buffer Reader
+			Reader reader = new BufferedReader( new InputStreamReader(inputStream, "UTF-8"), bufferSize);
+			
+			
+			ANSWER:
+			
+				http://stackoverflow.com/questions/3459127/should-i-buffer-the-inputstream-or-the-inputstreamreader
+				
+				Buffer the Reader because it is more efficient. 
+			
+			BUT, not addressed by that answer:
+			
+			// Buffer Reader and InputStream
+			Reader reader = new BufferedReader( new InputStreamReader( new BufferedInputStream(inputStream), "UTF-8"));
+			
+
+	
+	ANDROID:
+	
+		FileInputStream fileInputStream = myContext.openFileInput("test.dat");
+		
+		InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
+		
+		BufferedReader br = new BufferedReader(inputStreamReader);
+		
+		
+		
+	GENERIC:
+	
+		Example of reading bytes:
+	
+		FileInputStream fileInputStream;
+		FileOutputStream fos;
+		
+		try{
+		
+			fileInputStream = new FileInputStream("input.txt");
+			
+			fos = new FileOutputStream("output.txt");
+			
+			int intByte = 0;
+			
+			while( (intByte = fileInputStream.read()) != -1){		// .read() reads a byte of data from the input stream, returns int.
+			
+				fos.write(intByte);									// Writes the byte specified by the int.
+			}	
+		
+		}
+		finally{
+		
+			if(fileInputStream != null){ fileInputStream.close();}
+			
+			if(fos != null){ fos.close();}
+		
+		}
+		
+		
+	GENERIC:
+	
+		Example of reading characters:
+	
+		Reader --> InputStreamReader --> FileReader
+	
+		FileReader reader;
+		FileWriter writer;
+		
+		
+			GENERIC 1:
+			
+				reader = new FileReader();
+				
+				int charInt = reader.read(); 						// .read() reads a char and returns an int.
+				
+				while(charInt != -1){
+				
+					char character = (char) charInt;
+					
+					charInt = reader.read();
+				}
+			
+			
+			
+			GENERIC 2:
+		
+				try{
+				
+					reader = new FileReader("input.txt");
+					writer = new FileWriter("output.txt");
+					
+					int intCharacter = 0;
+					
+					while(  (intCharacter = reader.read()) != -1){		// .read() reads a character, returns int.
+					
+						writer.write(intCharacter);						// .write() writes a character where the int specifies the character to be written.
+					}		
+				}
+				finally{
+				
+					if(reader != null){ reader.close();}
+					
+					if(writer != null){ writer.close();}		
+				}
+		
+		
+		
+		
+	GENERIC:
+	
+		Example of reading from input device (keyboard):
+		
+		InputStreamReader inputStreamReader;
+		
+		try{
+		
+			inputStreamReader = new InputStreamReader(System.in);
+			
+			System.out.println("Enter some characters, type 'q' to quit.");
+			
+			char character;
+			
+			while( character != 'q'){						// single quotes denote char, not string.
+			
+				character = (char) inputStreamReader.read();
+				
+				System.out.print(character);			
+			}		
+		}
+		finally{
+		
+			if(inputStreamReader != null){ inputStreamReader.close(); }
+		}
+		
+		
+	JOHN'S ANDROID CODE EXAMPLE:
+
+		FileInputStream fis = openFileInput("myFileText");
+		
+		BufferedReader reader = new BufferedReader( new InputStreamReader( new DataInputStream(fis)));
+		
+		EditText editText = (EditText)findViewById(R.id.edit_text);
+		
+		String line;
+		
+		while(  (line = reader.readline()) != null){
+		
+			editText.append(line);
+			editText.append("\n");
+		}
+		
+		
+		QUESTIONS:
+		
+			1. Why use a DataInputStream? DataInputStream allows us to read primitives from an InputStream.
+				But here we're not leveraging that ability, are we?, so why use it?
+				
+			2. As I tentatively understand it at the moment:
+			
+				DataInputStream is an InputStream subclass, hence it reads and writes bytes. If you are reading
+				bytes and you know they are all going to be ints or some other primitive data type, then you
+				can read those bytes directly into the primitive using DataStreamInput. Thought: would you  
+				need to know the type (int, string, etc) of the content being read before it is read? A: Yes.
+				
+				The question I am having is, why not use a InputStreamReader wrapped around the InputStream's
+				byte data? With this approach you are still reading the bytes, then converting them to integers that
+				represent characters. Which integers represent which characters depends on the character set specified,
+				e.g., "UTF-8".
+				
+				My guess answer: if speed is really important, and you can do it, then converting the InputStream's
+				byte data directly to the primitive via DataInputStream would be the way to go? This avoids the
+				Reader having to "cast" the byte data to an int first; and it wouldn't rely on providing a character
+				set to interpret which character is being represented by the returned integer. I suppose this is
+				what people mean by DataInputStream allows for a machine-indepent read of the underlying data.
+				
+					Simplification: DataInputStream can convert bytes directly to primitives. 
+					
+					
+			I asked this question on Stackoverflow, some good answers:
+			
+				http://stackoverflow.com/questions/25511536/datainputstream-vs-inputstreamreader-trying-to-conceptually-understand-the-two
+				
+				Summary: the DataInputStream is serving no purpose in the above example.
+	
+		
+		
+		
+	StackOverflow Q: where should a .txt file be stored so Android app can use it? http://stackoverflow.com/questions/5771366/reading-a-simple-text-file
+	
+		test.txt in /assets:
+		
+			AssetManager am = context.getAssets();
+			InputStream input = am.open("test.txt");
+			
+			
+		test.txt in /res/raw:
+		
+			InputStream input = getResources().openRawResource(R.raw.test);
+			
+			
+			
+	StackOverflow Q: read from a text file from SD card: http://stackoverflow.com/questions/2902689/how-can-i-read-a-text-file-from-the-sd-card-in-android
+	
+	
+		//Find the directory for the SD Card using the API
+		File sdcard = Environment.getExternalStorageDirectory();
+
+		//Get the text file
+		File file = new File(sdcard,"file.txt");
+
+		//Read text from file
+		StringBuilder text = new StringBuilder();
+
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(file));
+			String line;
+
+			while ((line = reader.readLine()) != null) {
+				text.append(line);
+				text.append('\n');
+			}
+			br.close();
+		}
+		catch (IOException e) {
+			//You'll need to add proper error handling here
+		}
+
+		//Find the view by its id
+		TextView tv = (TextView)findViewById(R.id.text_view);
+
+		//Set the text
+		tv.setText(text);
+		
+		
+	
+	Android Developers: http://developer.android.com/reference/java/io/FileInputStream.html
+	
+		File file = new File("test.dat");
+		
+		InputStream in = null;
+		
+		try{
+		
+		
+		}finally{
+		
+			if(in != null){
+				
+				in.close();
+			}
+		}		
+		
+		
+VIDEO #11: String Resources
+
+	To create a strings.XML entry from text that is in code:
+
+	<button text = "text on my button"** />
+	
+		**Note: select text, R-click, quickfix, extract string.
+		
+		
+
+VIDEO #12: Icons
+
+
+	Icons are stored in the res/drawable folder.
+	
+	AndroidManifest.xml --> application tab: Icon: @drawable/name_of_icon
+	
+	
+VIDEO #13: Phone Debugging
+
+
+	Windows SDK manager
+	AndroidManifest.xml --> application tab: Debugging/ true
+	
+	Device setting --> deveoper options: USB Debugging
+	
+	
+	
+VIDEO #14: Data Storage: Shared Preferences
+
+
+	Key_value pairs
+	keys are Strings; values are primitive types.
+	
+	public static final String PFR = "preferences_file_name";
+	
+	
+	SET PREFERENCES:
+	
+		SharedPreferences sp = getSharedPReferences(PFR, MODE_PRIVATE);
+		
+		SharedPreferences.Editor ed = sp.edit();
+		
+		ed.put**primtiveType**("key", primitiveValue);
+		
+		ed.commit();
+		
+		
+	GET PREFERENCES:
+	
+		SharedPreferences sp = getSharedPreferences(PFR, MODE_PRIVATE);
+		
+		**PrimtiveType** value = sp.get**primitiveType**("key", defaultPrimitiveValueIfNoValueFound);
+	
+		
+		
+
+VIDEO #15: Toasts
+
+	Get string from string.xml resource:
+	
+		getString(R.string.name_of_string);
+		
+	Make toast:
+	
+		Toast.makeText(this, text, Toast.LENGTH_LONG).show();
+		
+			'this' is a reference to current activity.
+			If inner class or anonymous class use Activity_Name.this
+			
+			
+			
+			
+VIDEO #16: Add an Activity
+
+	Project --> new --> other --> Android Activity: name it, etc.
+	
+	AndroidManifest.xml --> new activity must be added to it (but Eclipse IDE will probably do that for you).
+	
+		<manifest ...~...
+			<application
+				<activity
+					android:name="referenceToClassThatImplementsThisActivity"
+						
+						**fully qualified name or ".xyz" --> '.' refers to package specified in <manifest>
+						
+					android:label="labelDisplaysOnScreenWithTheActivity"
+					
+					<intent-filter> --> specifies intents this activity responds to.
+						
+						<action android:name="android.intent.action.MAIN" />
+						<catagory android:name: "Add_catagory_name_to_intent_filter" />
+							** eg: name: "android.intent.catagory.LAUNCHER"
+							
+							**there are different actions and catagories available. These indicate this activity is the one to launch the app with.
+							
+					</intent-filter>
+					
+					
+					
+VIDEO #17: ImageView
+
+	AndroidManifest.xml
+	
+		<activity android:screenOrientation="portrait" --> stops the screen from rotating when device is rotated.
+		
+	ImageActivity.xml
+	
+		<imageView
+			android:id="@+id/name_of_id"
+			android:layout_width="xyz"
+			android:layout_height="xyz"
+			android:content_description="@string/image_description"
+			android:src="@drawable/name_of_image" />
+			
+		Other ImageView .xml attributes:
+		
+			android:adjustviewInbounds="true or false"
+			android:cropToPadding="t or f"
+			android:maxHeight="200dp"
+			android:maxWidth="200dp"
+			android:tint="@color/name_of_color"
+			android:scaleType="fitXY"
+			
+				developer.android.com/reference/android/widget/imageview.scaletype.html scale types:
+				
+					Center, centerCrop, centerInside, fitCenter, fitEnd, fitStart, fitXY, matrix
+					
+					
+					
+					
+VIDEO #18: ImageView & TouchListener
+
+	fitXY --> scale image to fit ImageView.
+	
+	ImageView iv = (ImageView)findViewById(R.id.name_of_imageView_in_xml);
+	
+	iv.setOnTouchListener( new OnTouchListener(){
+	
+		@override
+		public boolean onTouch(View v, MotionEvent e){
+	
+			// get coordinates of touch
+			float x = e.getX();
+			float y = e.getY();
+			
+			string msg = String.format("Coordinates of touch: %.2f, %.2f", x, y);
+			
+			Log.d(tag, msg);
+			
+			
+			
+			
+VIDEO #19: Alert Dialog
+
+	AlertDialog.Builder builder = new Builder(this);
+	
+	builder.setPositiveButton("Text on button", new OnClickListener(){
+	
+		public void onClick(DialogInterface diaglog, int which){
+			...~...
+		}
+	}
+	
+	builder.setTitle("Title of dialog");
+	builder.setMessage("Message to user");
+	
+	AlertDialog dlg = builder.create();
+	
+	dlg.show();
+	
+	
+	
+	
+VIDEO #20: Observer pattern
+
+
+	THE OBSERVER:
+	
+		Public class Ross implements TheInterface{
+		
+			private TheCompositionClass x = new TheCompositionClass();
+			
+			x.setTheCompositionClassListener(x);
+			
+			@override
+			public void interfaceMethod(List<Point> p)
+			
+				Log.d(p.size());
+		
+	THE OBSERVED:
+	
+		public class TheCompositionClass implements OnTouchListener{
+		
+			// the listener
+			TheInterface listener;
+		
+			List<Point> points = new ArrayList<Point>();
+			
+			@override
+			public boolean onTouch(View v, MotionEvent e){
+			
+				int x = (int) e.getX();
+				int y = (int) e.getY();
+				
+				points.add( new Point(x,y));
+				
+				if(points.size() >= 4){
+				
+					if(listener != null){
+					
+						listener.interfaceMethod(points);
+					}
+				}
+			}
+			
+			public void setTheCompositionClassListener(TheInterface interface){
+			
+				this.listener = interface;
+				
+			}
+				
+			((Added in video #25)):
+			public void clearPointList(){
+				points.clear();
+			}
+			
+	THE GLUE:
+	
+		public TheInterface{
+		
+			public void interfaceMethod(List<Point> p);
+			
+		}
+		
+		
+		
+	Notes:
+	
+	The observer is of an interface type.
+	The observer sends a reference to itself to the observed.
+	
+	The observed has a method that allows some other class to set themselves up as
+	a listener, the only requirement is they need to be of the interface type (which
+	guarantees that the handler method will be present in the class that wants to
+	be a listener; and, the observed will only have access to the methods described
+	in the interface; this reduces coupling and reinforces capsulization).
+		
+		
+	Another way to do the observer pattern:
+	
+	THE OBSERVER
+	
+		public class A implements Interface;
+		
+	THE OBSERVED
+	
+		public class B{
+		
+			// To instantiate B requires a class of type Interface
+			B(Interface x);
+		
+		}
+		
+		...the only difference here is not having a method to assign the
+		Interface variable an object of the Interface type. If you know your
+		class is going to always implement the listener, why not? Possibly 
+		because you don't want to overcrowd the constructor?
+		
+			
+			
+	THE GLUE
+	
+		Interface
+		
+		
+	Another, less desirable way (because it tightly couples the classes):
+	
+	THE OBSERVER
+	
+		public class A;
+		
+	The OBSERVED
+	
+		public class B{
+		
+			A listener;
+		
+			B(A concreteInstanceOfClassA){
+			
+				this.listener = concreteInstanceOfClassA;
+				
+			}			
+		}
+		
+		
+	....but now class B has access to class A members it doesn't need.
+	
+	Resaid:
+	That looks a lot like the one above but the difference is the 
+	Observed now has access to *everything* in class A. Which can be
+	uncool in the Object Oriented world. As in, "Oo, that's a mistake."
+	
+	And lastly, you could forgo the whole thing: a fragment can have 
+	access to any of it's parent activity methods via:
+	
+		PseudoCode:
+		
+		((ParentActivity)getActivity()).someMethodInParentActivity(passedInArgument);
+	
+	
+	
+
+VIDEO #21 & 22: SQLite database creation & insertion
+
+	public class RossDatabase extends SQLiteOpenHelper{
+	
+		private static final String DB_NAME = "name_of_database";
+		private static final String TABLE_NAME = "name_of_table";
+		private static final String ID_COLUMN = "_id";
+		private static final String X_COLUMN = "x";
+		private static final String Y_COLUMN = "y";
+		
+		public RossDatabase(Context c){
+			super(c, DB_NAME, null, Version #);
+		}
+		
+		VIDEO 21
+		
+		public void onCreate(SQLiteDatabase db){
+		
+			String sqlString = String.format("create table %s(%s, %s, %s)",
+				TABLE_NAME,
+				ID_COLUMN + "INTEGER PRIMARY KEY",
+				X_COLUMN + "INTEGER NOT NULL",
+				Y_COLUMN + INTEGER NOT NULL");
+				
+			db.execute(sqlString);
+		}
+		
+		VIDEO 22
+		
+		public void onUpdate(...~...){...~...}
+		
+		public void insertIntoDatabase(List<point> points){
+		
+			SQLiteDatabase db = getWriteableDatabase();
+			
+			// delete contents of table
+			db.delte(TABLE_NAME, null, null);
+			
+			int idCounter = 0;
+			
+			for(Point aPoint : points){
+			
+				ContentValues cv = new ContentValues();
+				
+				cv.put(ID_COLUMN, idCounter);
+				cv.put(X_COLUMN, aPoint.x);
+				cv.put(Y_COLUMN, aPoint.y);
+				
+				db.insert(TABLE_NAME, null, cv);
+				
+				idCounter++;			
+			}
+		
+			db.close();		
+		}
+		
+		Notes:
+		
+		When the OBSERVED detects 4 points have been touched it passes the List<Points> to
+		the OBSERVER (via Interface method), the OBSERVER then passes List<Points> to its
+		compositionally-held instance of RossDatabase, where the Points are inserted into
+		the database.
+		
+		
+		
+		
+VIDEO #23: Retrieve from database
+
+	public class RossDatabase extends SQLiteOpenHelper{
+	
+		...~...
+		
+		public List<Point> getFromDatabase(){
+		
+			List<Point> points = new ArrayList<Point>();
+			
+			SQLiteDatabase db = getReadableDatabase();
+			
+			String sqlString = String.format("SELECT %s, %s FROM %s ORDERBY %s",
+				X_COLUMN, Y_COLUMN, TABLE_NAME, ID_COLUMN);
+				
+			Cursor cursor = db.rawQuery(sqlString, null);
+			
+			while(cursor.moveToNExt()){
+			
+				int x = cursor.getInt(0);
+				int y = cursor.getInt(1);
+				
+				points.add( new Point(x,y));			
+			}
+			
+			db.close();
+			return points;		
+		}	
+	}
+	
+	
+	
+	
+VIDEO #24: AsyncTask --> make database calls on their own thread.
+
+	public class ImageActivity extends Activity implements TheInterface{
+	
+		...~...
+		
+		public void interfaceMethod(List<Point> points){
+		
+			AlertDialog.Builder b = new AlertDialog.Builder(this);
+			
+			b.setMessage(R.string.some_message);
+			
+			final AlertDialog dlg = b.create();
+			
+			dlg.show();		
+			
+			AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>(){
+			
+				protected void doInBackground(Void... params){
+				
+					try{ thread.sleep(1500);}
+					catch( ...e) { ... }
+					
+					db.insertIntoDatabase(points);
+					
+					return null;				
+				}
+				
+				protected void onPostExecute(Void result){
+					
+					dlg.dismiss();
+				}			
+			}
+			
+			task.execute();
+		}	
+	}
+		
+		
+		
+		
+VIDEO #25: No new Android added.
+
+	IDE tip: to delete SharedPreferences in the IDE: DDMS --> fileExplorer --> data --> "AppPackageName" --> Shared Preferences folder --> "ImageActivity.xml"
+	
+		----> delete the "ImageActivity.xml" to remove SharedPreferences.
+
+	In this video:
+	
+	1) 	Create saveToDatabase() method in ImageActivity.
+	
+		Move code that saves points to the database out of itnerfaceMethod()
+		and to ImageActivity.saveToDatabase() method.
+		
+	2)	Change interfaceMethod to:
+	
+			public void interfaceMethod(List<Point> p){
+			
+				if(!isPasswordSet){
+					
+					saveToDatabase(p);
+				}else{
+					
+					verifyPassword(p);				
+				}			
+			}
+			
+	3)	Use SharedPreferences to store if a password has been set.
+	
+		--> do this in postExecute of AsyncTask in saveToDatabase() method.
+		
+	4) Add TheCompositionClass.clearPointList() method.
+	
+		--> call this after List<Point> has been either A) saved to db, or B) had points verified.
+		
+	5) In ImageActivity.onCreate() retrieve boolean "passwordIsSet" from SharedPreferences 
+	
+		--> if password is not set then show password prompt.
+		
+	6) Implement verifyPassword() method.
+	
+		private void verifyPassword(List<Point> touchedPoints){
+		
+			...do AlertDialog stuff ... .show();
+			
+			AsyncTask<Void, Void, Boolean> task = new AsyncTask<Void, Void, Boolean>(){
+			
+				protected Boolean doInBackground(Void... params){
+				
+					List<Point> savedPoints = db.getPoints();
+					
+					if(savedPoints.size() != 4 || touchedPoints.size() !=4){
+					
+						return false;
+					}
+					
+					for(int i = 0; i < 4; i++){
+					
+						Point aSavedPoint = touchedPoints.get(i);
+						
+						// A-squared + B-squared = C-squared; x-squared + y-squared = distance
+						int xDiff = aSavedPoint.x - aTouchedPoint.x;
+						int yDiff = aSavedPoint.y - aTouchedPoint.y;
+						
+						int distanceBetweenPointsSquared = (xDiff)(xDiff) + (yDiff)(yDiff);
+						
+						if(distanceBetweenPointsSquared > ALLOWABLE_PIXEL_SLOP){
+						
+							return false;
+						}					
+					}
+					
+					return true;				
+				}
+
+				protected void onPostExecute(Boolean passed){
+				
+					...dismiss dialog;
+					
+					...TheCompositionClass.clearPointList();
+					
+					if(passed){
+					
+						...start activity;
+					}else{
+					
+						...toast: "Access Denied"
+					}				
+				}
+			}
+			
+			task.execute();
+			
+			
+			
+			
+VIDEO #26: Support for Multiple Screens
+
+
+	AndroidManifest.xml:
+		
+		<supports-screens android: largeScreens="true" android: resizable="true" android:smallScreens="false" />
+		
+	Using AndroidManifest.xml GUI:
+	
+		Manifest tab --> extras --> add --> select "suuprts screens" ... --> right window gives attribute choices.
+		
+		
+		
+		
+		
+VIDEO #27: Intent
+
+
+	Intent intent = new Intent(CurrentActivity.this, ActivityToOpen.class);
+	
+	startActivity(intent);
+	
+	
+	
+	
+	
+VIDEO #28: Nested Layout Groups
+
+
+	<LinearLayout
+	
+		If you use horiztontal orientation & want to use **weight**
+			then zero-out android:layout_width="0dp"
+			
+		If you use vertical orientation & want to use **weight**
+			then zero-out android:layout_height="0dp"
+			
+			
+			
+			
+VIDEO #29: Option Menus
+
+	The .xml file name for a menu of an activity is the same name given to the activity but they reside in different folders:
+
+		Activity: res/layout/MyActivity.xml
+		
+		Menu: res/menu/MyActivity.xml
+		
+		Menu.xml:
+		
+			<menu xmlns:android"...~...">
+			
+				<item android:id="@+id/menu_option1"
+				
+					android:title="@string/words_for_option1"
+					
+					android:orderInCategory="100" />
+					
+			</menu>
+			
+		MyActivity.java:
+		
+			public boolean onCreateOptions(Menu menu){
+			
+				// inflate the .xml menu file
+				getMenuInflater().inflate(R.menu.my_activity, menu);			
+			}
+			
+			To handle user clicking menu item:
+			
+				onMenuItemSelected(int featureId, MenuItem item){
+				
+					switch(item.getItemId()){
+					
+						case R.id.menu_option1:
+						
+							Toast.makeText(this, "yo", Toast.LENGTH_LONG).show();
+							return true;
+							
+						default:
+							return Super.onMenuItemSelected(featureID, menu);					
+					}
+				
+				}
+			
+			
+			
+			
+VIDEO #30: Intents & Passing Data
+
+
+	Activity_One														
+	------------														
+								
+	Intent intent = new Intent(this, Activity_Two.class);
+	intent.putExtra("key", value);										
+	startActivity(intent);
+	
+	Activity_Two
+	------------
+	
+	Bundle bundle = getIntent.getExtras();
+	
+	if(bundle != null){
+	
+		Boolean resetPassword = bundle.getBoolean("key");
+		
+		if(resetPassword){
+			
+			// reset database
+			// change setPassword bool to false
+			// call PasswordPrompt()		
+		}	
+	}
+
+			
+			
+			
+VIDEO #31: Start Activity For Result
+
+
+	Activity_1
+	----------
+	
+	Button b1 = (Button)findViewById(R.id.b1);
+	b1.setOnClickListener( new onClickListener(){
+	
+		@override
+		public void onClick(View v){
+		
+			Intent intent = new Intent(Activity_1.this, Activity_2.class);
+			
+			startActivityForResult(intent, 42);		
+		}	
+	}
+	
+	public void onActivityResult(int requestCode, int resultCode, Intent data){
+	
+		switch(requestCode){
+		
+			case 42:
+				...do something...
+		
+		}	
+	}
+		
+		
+	Activity_2	
+	---------------
+		
+	Button b2 = (Button)findViewById...
+	
+	b2.setOnClickListener( new OnClickListener...
+		@override
+		public void onClick(View v){
+
+			// set the result
+			setResult(Activity.RESULT_OK);
+			
+			// make the activity stop
+			finish();
+		}
+
+		
+		
+		
+VIDEO #32 & #33: Take a Photo, Save Photo, Retrieve Photo
+
+
+	AndroidManifest.xml:
+	
+		GUI:
+	
+			Manifest tab --> extras --> add --> uses feature
+			
+				right pane: name: android.hardware.camera
+				
+			permissions --> write external storage
+		
+		
+		.xml
+		
+			<uses-feature android:name="android.hardware.camera" android:requried="false" />
+			<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+			
+			
+	Java code:
+	
+		File wherePicturesAreStored = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURE);
+		
+		File imageFile = new File(wherePicturesAreStored, "name_of_file");
+		
+		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+		
+		intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(imageFile));
+		
+		startActivityForResult(intent, 007);
+		
+		
+		protected void onActivityResult(int requestCode, int resultCode, Intent data){
+		
+			if(requestCode == 007){
+			
+				Bitmap photo = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+				
+				if(photo != null){
+				
+					ImageView iv = (ImageView)findViewById(R.id.imageview_id);
+					
+					iv.setImageBitmap(photo);
+				}
+			}		
+		}
+		
+		
+		
+		
+VIDEO #34: ListView
+
+	Add an array to strings.xml:
+	
+		<string-array name="array_name">
+		
+			<item>string one</item>
+			<item>string two</item>
+			<item>string three</item>
+			
+		</string-array>
+
+	XML:
+	
+		ListView using string array defined in Strings.xml:
+	
+		<ListView android:id="@+id/list_id"
+		
+			android:entries ="@array/array_name"
+			
+		</ListView>
+		
+		
+	JAVA CODE:
+	
+		ListView list = (ListView)findViewById(R.id.list_id);
+		
+		list.setOnItemClickListener( new onItemClickListener(){
+		
+			@override
+			public void onItemClick(AdapterView<?> adapter, View v, int position, long id){
+			
+				Toast.makeText(Activity.this, "Position: " +position +"; string: " +adapter.getItemAtPosition(position), Toast.LENGTH_LONG).show();			
+			}		
+		}
+		
+		
+		
+		
+		
+VIDEO #35: Obtain String[] from strings.xml
+
+	String[] stringsArray = getResources().getStringArray(R.array.array_name);
+	
+	ArrayAdapter<String> adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1**, stringsArray);
+	
+		**An android constant that points to a layout in XML, the XML defines a row of the ListView.
+		
+	listView.setAdapter(adapter);
+	
+	
+	
+	
+	
+VIDEO #36: Custom Adapter
+
+
+	Adapter's job:
+	
+		assign data to the view(s) that comprise a single row of a ListView.
+		
+		
+	ACTIVITY:
+	
+		MyAdapter mAdapter = new MyAdapter(this, some_list);
+		
+		ListView listView = (ListView)findViewById(R.id.list_view_id);
+		
+		listView.setAdapter(mAdapter);
+		
+	XML for row's layout:
+	
+		You need to define an .xml file that will define each row of the ListView.
+		Not showing that here other than the IDs:
+		
+			res/layout/ ==> new Android XML file --> name it: row_listView ((see this name used below))
+			
+			row_listView.xml ID's: 
+			
+				row_view_1_id ((see this ID used below))
+				row_view_2_id
+				row_view_3_id
+				
+	
+	CUSTOM ADAPTER:
+	
+		public class MyAdapter extends BaseAdapter implements ListAdapter{
+		
+			private List<MyObject> mList;
+			private Context mC;
+			
+			public MyAdapter(Context c, List list){
+			
+				this.mList = list;
+				this.mC = c;			
+			}
+			
+			public int getCount(){
+			
+				return mList.getSize();
+			}
+			
+			public Object getItem(int position){
+			
+				return mList.getItem(positions);
+			}
+			
+			public long getItemId(int position){
+			
+				return mList.getItem(position).getId();
+			}
+			
+			public View getView(int position, View convertView, ViewGroup parent){
+			
+				LayoutInflater inf = (LayoutInflater)mC.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+				
+				View view = inf.inflate(R.layout.row_listView, null);
+				
+				MyObject m = mList.get(position);
+				
+				String f1 = m.getterMethod1();
+				String f2 = m.getterMethod2();
+				String f3 = m.getterMethod3();
+				
+				TextView f1_textView = (TextView)view.findViewById(R.id.row_view_1_id);
+				TextView f2_textView = (TextView)view.findViewById(R.id.row_view_2_id);
+				TextView f3_textView = (TextView)view.findViewById(R.id.row_view_3_id);
+				
+				f1_textView.setText(f1);
+				f2_textView.setText(f2);
+				f3_textView.setText(f3);
+				
+				return view;			
+			}
+		}
+		
+		
+		
+		
+		
+VIDEO #37: Add Icons To ListView
+
+	Where to find Android icons:
+	
+		Android-sdks/platforms/android-16/data/res/drawable...
+		
+	Add images to project:
+	
+		-- copy and paste into appropriate drawable folder.
+		-- drag and drop into drawable folder.
+		
+		Use icon for each drawable density.
+		
+		
+	XML for rows layout:
+	
+		Add to row_listView.xml:
+	
+		<ImageView android:id="@+id/row_view_4_id"
+			android:src="@drawable/name_of_drawable"
+			android:gravity="center_vertical"**
+
+				**centers icon image in the row
+				
+				
+	The example code uses a custom Message object that has a boolean field. The state of the
+	boolean field determines which icon is shown in the ListView row.
+	
+		Note on boolean getters: isXYZ() instead of getXYZ()
+		
+	
+	CUSTOM ADAPTER add:
+	
+		In public View getView(...~...){
+		
+			...~...
+			
+			ImageView iv = (ImageView)findViewById(R.id.row_view_4_id);
+			
+			boolean isRead = message.isRead();
+			
+			int iconId = R.drawable.name_of_drawable_1;
+			
+			if(isRead){
+				
+				iconId = R.drawable.name_of_drawable_2;
+			}
+			
+			Drawable icon = context.getResources().getDrawable(iconId);
+			
+			iv.setImageDrawable(icon);
+			
+			...~...
+			
+			return view;
+		}
+		
+		
+
+		
+		
+CUSTOM CODE FOR VIDEO #37
+
+	The ListView holds attributes of image objects. Image objects are custom objects that
+	have the following fields:
+	
+		int id;
+		String title;
+		String Uri;		
+		Boolean viewed;
+		
+		Note: the Uri is a dummy String that doesn't actually point to a resource.
+		
+	ACTIVITY
+		
+		public class MainActivity extends Activity implements OnClickListener, OnItemClickListener{
+		
+			ImageAdapter mAdapter;
+			List<Image> images;
+			
+			protected void onCreate(...~...){
+			
+				...~...
+				
+				initializeViews();
+				getImageCollection();
+				setUpImageList();
+			}
+			
+			private void initializeViews(){
+			
+				...get handle to views...
+			}
+			
+			private void getImageCollection(){
+			
+				images = new ArrayList<Image>();
+				
+				...populate List with four dummy images:
+				
+				images.add( new Image(8, "cainan", "path_to_image"));
+				images.add( new Image(9, "ross", "path_to_image"));
+				images.add( new Image(10, "clay", "path_to_image"));
+				images.add( new Image(11, "xander", "path_to_image"));
+			}
+			
+			private void setUpImageList(){
+			
+				ListView iv = (ListView)findViewById...
+				
+				mAdapter = new ImageAdapter(this, images)**;
+				
+					**A custom Adapter, constructor given Context and List<Image>
+					
+				iv.setAdapter(mAdapter);
+				
+				iv.setOnItemClickListener(this);
+			}
+			
+			@override
+			public void onClick(View v){
+			
+				images.add( new Image(42, "Added Dude", "path to image"));
+				
+				mAdapter.notifyDataSetChanged();
+			}
+			
+			@override
+			public void onItemClick(AdapterView<?> adapter, View view, int position, long id){
+			
+				Image image = (Image)adapter.getItemAtPosition(position);
+				
+				image.setViewed(true);
+				
+				mAdapter.notifyDataSetChanged();
+				
+				String title = image.getTitle();
+				String imageUri = image.getUri();
+				
+				Intent intent = new Intent(this, DisplayOneImage.class);
+				
+				intent.putExtra("Title", title);
+				intent.putExtra("URI", imageUri);
+				
+				startActivity(intent);		
+			}
+		}
+		
+		
+	CUSTOM ADAPTER:	
+	
+		public class IimageAdapter extends BaseAdpater{
+		
+			private List<Image> imageList;
+			private Context mC;
+			private static LayoutInflater inflater = null;
+			
+			public ImageAdapter(Context c, List<Image> list){
+			
+				this.imageList = list;
+				this.mC = c;					
+				inflater = (LayoutInflater)mC.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			}
+		
+			public int getCount(){ return imageList.getSize();}
+			public Object getItem(){ return imageList.get(position);}
+			public long getItemId(){ return imageList.get(position).getId();}
+			
+			// HOLDER PATTERN
+			
+			private class ViewHolder{
+			
+				ImageView iconView;
+				TextView titleView;
+				TextView uriView;
+			}
+			
+			@override
+			public view getView(int position, View convertView, ViewGroup parent){
+			
+				ViewHolder holder;
+				
+				View xmlTemplate = convertView;
+				
+				if(xmlTemplate == null){
+				
+					xmlTemplate = inflater.inflate(R.layout.row_listView_relative_layout, null);
+					
+					holder = new ViewHolder();
+					
+					holder.iconView = (ImageView)xmlTemplate.findViewById(R.id...~...);
+					holder.titleView = (TextView)xmlTemplate.findViewById(R.id...~...);
+					holder.uriView = (TextView)xmlTemplate.findViewById(R.id...~...);
+					
+					xmlTemplate.setTag(holder);						
+				}else{
+				
+					holder = (ViewHolder)xmlTemplate.getTag();
+				}
+				
+				Image image = imageList.get(position);
+				
+				String title = image.getTitle();
+				String uri = image.getUri();
+				Boolean hasBeenViewed = image.isViewed();
+				
+				int iconId;
+				
+				if(hasBeenViewed){
+				
+					iconId = R.drawable.name_of_icon_1;
+				}else{
+				
+					icondId = R.drawable.name_of_icon_2;
+				}
+				
+				Drawable icon = mC.getResources().getDrawable(iconId);
+				
+				holder.iconView.setImageDrawable(icon);
+				holder.titleView.setText(title);
+				holder.uriView.setText(uri);
+				
+				return xmlTemplate;				
+			}			
+		}	
+	
+	
+	
+	
+	
+	
+VIDEO #38: Style Sheets
+
+
+	The idea is to separate style & layout. 
+	
+		Layouts are for putting views on screen.
+		Style sheets are for styling views.
+		
+		A "theme" is a style applied to a whole app.
+		
+	Create your own style sheet:
+	
+		new/android XML file/ select 'values' as the resource type --> give it a name.
+		
+	
+	Example Stylesheet:
+	
+		<?xml version="1.0" encoding="utf-8"?>
+		<resources>
+			<style name="some_name">
+				<item name="android:textSize">16sp</item>
+				<item name="android:textColor">#0F0</item>
+				<item name="android:paddingLeft">5dp</item>
+				<item name="android:background">@drawable/name_of_selector</item>
+			</style>
+		</resources>
+		
+		
+	In AndroidManifest.xml:
+	
+		If you change these like this it will apply to the whole app.
+	
+		GUI:
+			Application/Theme --> @style/AppTheme
+			
+		XML:
+			<application
+			
+				android:theme="@style/AppTheme"
+				
+				
+		You can place custom styles here:
+		
+		In res/values/styles.xml:
+		
+			<style name="AppBaseTheme" parent="..."></style>
+			
+			<style name="AppTheme" parent="AppBaseTheme">**</style>
+			
+				**custome styles go here.
+				
+				Notice the inheritance goin on here: the style "AppTheme"
+				inherits from "AppBaseTheme".
+			
+			
+		Note 1 
+		
+			In AndroidManifest the app theme is set to @style/AppTheme but
+			the parent of that them is "AppBaseTheme" --> AppTheme will
+			use whatever is in AppBaseTheme unless AppTheme overries parts of
+			AppBaseTheme.
+		
+		Note 2:
+	
+			res/values-v11 and res/values-v14 --> these both ahve a style.xml
+			file in them. The res/values-v14/styles.xml is chosen if device is
+			OS > 14 by declaring a style with the same name as default styles.xml:
+			
+				<style name="AppBaseTheme" parent="android:theme:Holo.Light.DarkActionBar"></style>
+				
+		Note 3:
+		
+			Styles directly applied to XML views will override styles in style sheets.
+			
+			Example of style applied to a view:
+			
+				<TextView
+					...~...
+					style="@styles/name_of_style" />
+					
+					
+					
+					
+					
+VIDEO #39: Selectors
+
+
+	Put them in res/drawable folder.
+	
+	new/Android XML file/select resource type "drawable"/slect 'selector'/name it
+	
+	<selector xmlns...~...>
+	
+		<item android:state_pressed**="true">
+			<color android:color="#FFF" />
+		</item>
+		
+		<item>
+			<color android:color="#000" />
+		</item>
+		
+			**Different state_options go here, e.g., checked, selected, etc.
+			Android checks the items top to bottom. The last item in this selector
+			does not have a state associated with it so it will be the default
+			in this case.
+			
+			
+			
+			
+			
+			
+VIDEO #40: Relative Layout
+
+
+	new/Android XML file/resource type=layout/RootElement = RelativeLayout/name it
+	
+	developer.Android.com/reference/android/widget/RelativeLayout.LayoutParams.html
+	
+		Ex: 
+			layout_above	layout_toLeftOf		layout_alignBottom		layout_alignParentBottom
+			
+			layout_below	layout_toRightOf	layout_alignTop			etc.
+			
+			
+			
+			
+			
+			
+			
+VIDEO #41: Custom AlertDialog
+
+	
+	Goal: create a custom alert dialog with 2 buttons inside of it.
+	
+	CODE: 
+	
+		AlertDialogBuilder builder = new AlertDialogBuilder(this);
+		
+		View v = getLayoutInflater().inflate(R.layout.laout_with_2_buttons, null);
+		
+		builder.setTitle(R.string.name_of_string);
+		
+		builder.setView(v);
+		
+		final AlertDialog dlg = builder.create();
+		
+		dlg.show();
+		
+		
+		Button takePhoto = (Button)dlg.findViewById(R.id.take_photo_btn);
+		Button browseGallery = (Button)dlg.findViewById(R.id.btn_browse_gallery);
+		
+		takePhoto.setOnClickListener( new OnClickListener(){
+		
+			@override
+			public void onClick(View v){
+			
+				takePhoto();
+			}
+		});
+		
+		browseGallery.setOnClickListener( new OnClickListener(){
+		
+			@override
+			public void onClick(View v){
+			
+				browseGallery();
+			}
+		});		
+		
+		
+		
+		
+		
+		
+VIDEO #41: Select Image From Gallery
+
+
+	CODE:
+	
+		private static final int REQUEST_CODE = 5; // whatever number I want
+	
+		private void browseGallery(){
+		
+			Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+			
+			startActivityForResult(intent, REQUEST_CODE);		
+		}
+		
+		
+		protected void onActivityResult(int requestCode, int resultCode, Intent data){
+		
+			if(requestCode == REQUEST_CODE){
+			
+				Toast.makeText(this, "Gallery Result:" + data.getData(), Toast.LENGTH_LONG).show();
+			}		
+		}
+		
+				Example result: Gallery Result: content://media/exteranl/images/media/664
+				
+					This is the URI of an image in the gallery, it is NOT a file name for the image.
+					
+					
+				
+
+
+
+				
+					
+VIDEO #42: Use Image From Gallery
+
+
+	CODE:
+	
+		protected void onActivityResult(int requestCode, int resultCode, Intent data){
+		
+			Uri imageUri = data.getData();
+			
+			String[] columnsOfDataToGetFromProvider = {MediaStore.Images.Media.DATA }
+			
+			
+					^^^ That is called a "projection and can be used as an argument 
+					here in this generic example:
+					
+					getContentResolver().query(uri, projection, selection, selectionArgs, sortOrder)
+					
+					
+						uri 			--> SQL FROM
+						projection		--> SQL columns
+						selection		--> SQL WHERE
+						selectionArgs	--> Used to replace "?" that are used in the selection
+						sortOrder		--> SQL ORDERBY
+						
+						
+			Cursor cursor = getContentResolver().query(imageUri, columnsOfDataToGetFromProvider, null, null, null);
+			
+			cursor.moveToFirst();
+			
+			String imagePath = cursor.getString(getColumnIndex(MediaStore.Images.Media.DATA**));
+			
+			
+				**MediaStore.Images.Media.DATA is the name of a column found in the cursor. The columns
+				in the cursor were defined in the query(); possible that the cursor also has the "_id" column in it?
+				
+			
+			Uri imageUri2 = Uri.parse(imagePath);
+			
+			String path = imageUri2.getPath();
+			
+			resetPassword(imageUri2);	
+		}	
+
+
+	IN OTHER ACTIVITY:
+	
+		imageView.setImageUri(Uri.parse(imagePath));
+		
+		
+	You should:
+	
+		Log.d --> the "imagePath", "imageUri", "imageUri2", and "path" variables to see what each says.
+		
+		
+		
+		
+		
+		
+
+VIDEO #43: Activity Life Cycle
+
+	
+		onCreate()		-->		onStart()		-->		onResume()		--> ACTIVTY
+									^						^				  |
+									^						^				  |
+									^						^				  |
+								onRestart()*			user returns**		***another activity in forground
+									^						^				  |
+									^						^				  |
+									^						^				  |
+		onDestroy()		<--		onStop()		<--		onPause()		<-----|
+	
+	
+	
+			*if user navigates back to activity then onStop() --> onRestart() --> onStart()
+			
+			**if user returns: onPause() --> onResume()
+			
+			***another activity in foreground: ACTIVITY --> onPause() --> A) user returns, see **
+																		  B) activity not visible on screen --> onStop()
+		
+		
+		
+		
+		
+		
+		
+VIDEO #44: Pre-Publication Checksum
+
+
+	Screen rotation
+	Incoming calls
+	Using other apps
+	Manifest:
+	
+		uses SDK
+		target SDK
+		uses Feature
+		supports screen sizes
+		permissions
+		debuggable set to false
+		
+		
+		
+		
+		
+		
+VIDEO #45: IDE (emulator) Screenshot: 
+
+	DDMS --> screenshot button looks like a camera.
+	
+	
+	
+	
+	
+	
+VIDEO #46: Sign & Export AppConfigurationEntry
+
+	Right-click app --> export/Android application/select app/keystore selection: create new or use existing.
+	
+	KeyStore: a file that stores your digitial certificate.
+	
+		Your digital certificate can be used for many apps.
+		
+	
+	Create new keystore:
+	
+		select location for file
+		give it a name
+		give it a password
+		
+		
+	Key creation:
+	
+		create key
+		alias, pw, years (30?)
+		
+	Destination APK file
+	
+		where to put ross-app.apk
+		
+			This .apk can now be uploaded to the Google Playstore.
+			
+			
+			
+			
+			
+VIDEO #47: Publish App
+
+
+	Check: exported? digitally signed? screen shots of app in use? 512x512 app icon?
+	
+	GooglePlay / Android Developer Console:
+	
+		Create a developer account: $25
+		Upload app
+		
+	Make sure app is available to > zero devices.
+	
+	If you want to sell it you need to set up a merchant account.
+	
+	
+	
+	
+	
+	
+VIDEO #48: Third Party APIs  ...using a .JAR file
+
+
+	Createing your own JAR file: Right-click project --> export/java: JAR file.
+	
+		!Note: Don't send people your source project or "something dreadful like that," send them a JAR file.
+		
+	Put Third party APIs in the "libs" folder: paste JAR in here. 
+	
+		Then:
+		
+		Right-click project --> BuildPath/Add JARs --> expand your project --> libs --> select JAR of interest --> click finish.
+		
+		Now use JAR in project ocde:
+		
+			textView.setText(SomeClassInJar.someStaticMethod()); --> Add import
+			
+	Should be able to find added API in project/Reference Libraries /name-of-jar.jar/package_in_jar/class_in_jar
+	
+	
+	
+	
+	
+	
+	
+VIDEO #49: Action Bars
+
+
+	ActionBars have icons & titles. You can hide these:
+	
+		ActionBar bar = getActionBar();
+		
+		bar.setDisplayShowHomeEnabled(false);	// hide icon
+		
+		bar.setDisplayShowTitleEnabled(false);	// hide title
+		
+		bar.hide(); 	// hides the entire ActionBar; this will cause Activity to be destroyed & redrawn.
+		
+		
+	public boolean onCreateOptionsMenu(Menus menu){
+	
+		getMenuInflater().inflate(R.menu.activity-main**, menu);
+	}
+		
+			**A reference to res/menu/activity-main.xml***
+			
+			***Open that & view it through the GUI interface:
+			
+			Group
+				-Item1 "Go"		
+				
+					"Item1" is the "@+id/name"
+					"Go" is the text.
+					
+				-Item2	"Edit"
+					
+					-Sub-menus
+						-Contact
+						-Photo	
+						
+						
+	This creates an ActionBar with the words "Go" and "Edit" at the top. If "Edit" is selected
+	then the submenu "Contact" and "Photo" will be shown (like a drop down menu).
+	
+	
+	Note:
+	
+		If all menu items are given attribute show_as_action="always" and they can fit on
+		the screen, then the vertical ". . ." won't display.
+		
+		
+		
+		
+		
+		
+		
+VIDEO #50: Repond to ActionBar Selections
+
+
+	R-click code window --> source --> override/implement methods: onOptionItemSelected
+	
+		public boolean onOptionItemSelected(MenuItem item){
+		
+			switch(item.getItemId()){
+			
+				case R.id.some_id_of_menu_item_in_activity-main.xml:
+				
+				...~...
+				
+				break;
+			
+			}
+		}
+		
+		
+		
+		
+		
+VIDEO #51: Download From Internet
+
+
+	private void downLoadHTML(){
+	
+		URL url = new URL("http://yahoo.com");
+		
+		InputStream is = url.openStream();
+		
+		InputStreamReader reader = new InputStreamReader(is);
+		
+		BufferedReader br = new BufferedReader(reader);
+		
+		
+		--> you can do it like that, or do it like this:
+		
+		BufferedReader br = new BufferedReader( new InputStreamReader(url.openStream()));
+		
+		String line = null;
+		
+		while( (line=br.readline()) != null){
+		
+			...do something like putting text in a TextView or log it. 		
+		}	
+	}
+	
+	
+	
+	
+	
+	
+VIDEO #52: Review of Internet Communication 
+
+
+	Check out video series on Servlets & JSP pages.
+		This will help you understand how Android app can contact & swap info with a server.
+		
+	Check out "Cloudbees" for free Java hosting.
+	
+	
+	
+	
+	
+	
+	
+VIDEO #53: A Simple Java Server Program
+
+
+	Video uses Apache Tomcat, an application server, on a PC. This free server program is like
+	what a web host might use.
+	
+	Eclipse for Java EE developers.
+	
+	In Eclipse: 
+	
+		File --> new --> Dynamic Web Project --> name it.
+		
+		R-click project --> new --> servlet.
+		
+		public class RossServer extends HttpServlet{
+		
+			// needs default constructor
+			
+			protected void doGet(...~...) ...~...{
+			
+				PrintWriter writer = response.getWriter();
+				
+				writer.println("Hello World");
+			}		
+		}
+		
+		
+	URL to local server: localhost:8080/project_name/RossServer
+	
+		When that is put in browser and browser contacts the server machine
+		running this server software it sends the doGet() response.
+		
+	
+	To upload project to hosting site:
+	
+		In Eclipse: Export --> WAR file.
+		
+		Upload WAR to hosting site.
+		
+	
+	To run project:
+	
+		In Eclipse: R-click project --> run as: Run on Server
+		
+	
+	A java servlet receives get & post requests and sends back responses.
+	
+	See JSP notes.
+	
+	
+		
+	
+	
+VIDEO #54: 
+
+	SERVER:
+	
+		protected void doGet(...~...request, response)....
+		
+			PrintWriter writer = response.getWriter();
+			
+			String id = request.getParameter("id");
+			
+			if(id == null)
+				
+				writer.println("<h1>No id</h1>");
+				
+			else
+			
+				writer.printline("<p>ID is: " +id +"</p>");
+				
+	
+	Upload WAR file to internet host. Test.
+	
+	
+	ANDROID:
+	
+		private void downloadFromServer() throws Exception**{
+		
+			**cheap and fast for demo only
+			
+			String id = "99";
+			
+			URL url = new URL("Address of my hosted servlet/RossServer?id=" +id);
+			
+			BufferedReader br = new BufferedReader( new InputStreamReader(url.openStream()));
+			
+			String line = null;
+			
+			while( (line=br.readLine()) != null){
+			
+				Log.d("ROSS", line);
+			}
+		}
+		
+		
+		
+		
+		
+		
+VIDEO #55: URL Escaping & Avoiding SQL Injection Attacks
+
+
+	SERVER:
+	
+		protected void doGet(...)...{
+		
+			PrintWriter writer = response.getWriter();
+			
+			String password = request.getParameter("password");
+			
+			if(password == null)
+			
+				writer.printline("<h1>No password</h1>");
+				
+			else
+			
+				writer.println("<p>Password is: " + password +"</p>");
+				
+		}
+
+	ANDROID:
+	
+		private void downloadHTML() throws Exception{
+			
+			String password = "_Lj#/?\R&";
+			
+				// The odd characters in that string can cause URL problems.
+				// Solution: escape the string
+				
+			password = URLEncoder(password, "UTF-8");
+			
+			URL url = new URL("address.to.online.server/MyServlet?password=" +password);
+			
+			BufferedReader br = new BufferedReader( new InputStreamReader(url.openStream()));
+			
+			String line = null;
+			
+			while( (line=br.readLine()) != null){
+			
+				Log.d("ROSS", line);
+			}		
+		}
+		
+		
+			
+		
+		
+VIDEO #56: JSON
+
+
+	Google "JSON Twitter" for example of URL that contacts a Twitter server and returns JSON.
+	
+		https://dev.twitter.com/docs/api/1/get/statuses/user_timeline
+	
+	Paste URL into browser and observe what is returned. Copy contents.
+	
+	Google: "JSON Formatter" and paste contents to see a cleaner presentation of the data.
+	
+	This is the URL from the example given at the URL listed above:
+	
+		https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&include_rts=true&screen_name=twitterapi&count=2
+		
+	If you change "screen_name=TheOnion" you can access the Onion's twitter feed. If you change count then the number
+	of items returned is altered.
+		
+		
+		https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&include_rts=true&screen_name=TheOnion&count=2
+		
+		NOTE: that is not working! And I tried the Twitter API 1.1 as noted at this URL:
+		
+			https://dev.twitter.com/docs/api/1.1/get/statuses/user_timeline
+			
+			And it says to use:
+			
+			https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=twitterapi&count=2
+			
+			...but it is not working for me. 
+			
+			
+	AT ANY RATE, here's a generic example of what is supposed to be returned:
+	
+		JSON ex:
+		
+			JSON array:
+			[
+				JSON objects:***
+				
+				{"key1":value, "key2":value, "key3":value},
+				{"key1":value, "key2":value, "key3":value},
+				...etc...			
+			]
+		
+			***not in the printout, just for clarification in these notes.
+			
+			
+			
+						
+			
+			
+VIDEO #57: Parse JSON
+
+
+	Button myButton = (Button)findViewById(R.id.id_of_button);
+	
+	myButton.setOnClickListener( new OnClickListener(){
+	
+		@override
+		public void onClick(View v){
+		
+			new AsyncTask<Void, Void, String>(){		
+				
+				@override
+				protected String doInBackground(Void... params){
+				
+					try{
+						return downloadHTML();		// changed return type from Void to String (Video #55 return was void)
+					}Catch(Exception e){
+						Log.d("ROSS", e.toString());
+					}
+					
+					return "Can't reach server. Is internet access enabled?";
+				}
+				
+				@override
+				protected void onPostExecute(String result){
+				
+					TextView tv = (TextView)findViewById(R.id.name_of_textView);
+					
+					// try{}catch(){} omitted
+					
+					TEST ONE:
+					
+						Object obj = new JSONTokener(result).nextValue()**;
+						
+							**This returns the next value of the input, in this case it is the "root"
+							of the JSON string that is in the result string.
+							
+						tv.setText(obj.getClass().toString());
+						
+						
+							--> RESULTS IN TEXTVIEW: "class org.json.JSONArray"
+						
+						Now you know the 1st item returns is a JSONArray. 
+						Now change the type from Object to JSONArray:
+						
+					
+					TEST TWO:
+					
+						JSONArray items = (JSONArray)( new JSONTokener(result).nextValue());
+						
+						for(int i=0; i < items.length(); i++){
+						
+							Object item = items.get(i);
+							
+							tv.append(item.getClass().toString());
+						}
+						
+						
+							--> RESULTS IN TEXTVIEW: "class org.json.JsonObject" --repeated items.length() number of times.
+							
+							
+						Now you know the JSONArray is filled with JSONObjects.
+						Now change the type from Object to JSONObject and get a key-value pair from the object:
+						
+						
+					TEST THREE: (only showing altered code)
+					
+						for(int i = 0; i < items.length(); i++){
+						
+							JSONObject item = (JSONObject)items.get(i);
+							
+							String value = item.getString("text");	// "text" is Twitter's key for titles of tweets.
+							
+								Note: you could build your own objects from what is returned.
+								
+							tv.append(value);
+							
+							
+							--> RESULTS IN TEXTVIEW: "value of string that was associated with the key "text"" -- repeated items.length() number of times.
+						}					
+				}			
+			}		
+		}	
+	});
+	
+	
+	
+	
+VIDEO #58: Formatting Data as JSON
+
+
+	private void sendDataToServer(){
+	
+		JSONObject jsonObject = new JSONObject();
+		
+		try{
+		
+			jsonObject.put("user", "ross");
+			jsonObject.put("password", "%?#@\{/}pqrs");
+			
+			JSONArray animals = new JSONArray();
+			
+			animals.put("lion");
+			animals.put("tiger");
+			animals.put("bear");
+			
+			jsonObject.put("animals", animals);
+			
+			String json = jsonObject.toString(2);  // the "2" is the amount of indentation
+			
+			TextView tv = (TextView)findViewById(R.id.id_of_textView);
+			
+			tv.setText(json);
+			
+		}catch(JSONException e){
+		
+			e.printStackTrace();
+		}	
+	}
+	
+		RESULT IN TEXTVIEW:
+		
+			{
+				"user" : "ross",
+				"password" : "%?#@\{\/}pqrs",			<-- Note**
+				"animals" : ["lion", "tiger", "bear"]
+			}
+		
+			**Note: the forward slash is automatically escaped. 
+			
+			
+			
+VIDEO #59: Making Server Respond to POST Requests
+
+
+	This is not Android specific code.
+	doGet() has parameters appended to URL. 
+	doPost() sends parameters in the header of the TCP/IP packets.
+	
+	SERVER:
+	
+		protected void doPost(...request, ....response) throws...{
+		
+			PrintWriter writer = response.getWriter();
+			 
+			BufferedReader reader = request.getReader();
+			 
+			String line = null;
+			 
+			while( (line=reader.readLine()) != null){
+			 
+				writer.println("doPost() received this: " + line);
+			 
+			}		
+		}
+		
+		
+VIDEO #60:Send JSON data via Android
+
+	ANDROID:
+	
+		AndroidManifest.xml --> give App internet permission.
+		Check to make sure device is connected to internet.
+		
+	
+		private String formatDataAsJSON(){
+		
+			final JSONObject object = new JSONObject();
+			
+			try{
+			
+				object.put("user", myObject.getName());
+				object.put("password", myObject.getPassword());
+				
+				JSONArray animals = new JSONArray();
+				
+				animals.put("lion");
+				animals.put("tiger");
+				animals.put("bear");
+				
+				object.put("animals", animals);	
+				
+				return object.toString(); 	<-- Note:**
+				
+					**Note: a number given to the toString() method will format the JSON into
+					human readible output and the number indicates the amount of indent.
+					This is not necessary, and a waste, if human eyes aren't going to be reading it.
+				
+			}catch(JSONException e){
+				
+				Log.d("ROSS", "Can't format JSON");
+			}
+			
+			return null;		
+		}
+		
+		
+		private void sendDataToServer(){
+		
+			new AsyncTask<Void, Void, String>(){
+			
+				@override
+				protected String doInBackground(Void... params){
+				
+					return getServerResponse( formatDataAsJSON() );
+				
+				}
+				
+				@override
+				protected void onPostExecute(String result){
+				
+					TextView tv = (TextView)findViewById(R.id.id_of_textview);
+					
+					tv.setText(result);
+				
+				}			
+			}.execute();		
+		}
+		
+		
+		private getServerResponse(String json){
+		
+			HttPost post = new HttpPost("url_of_internet_server/RossServlet");
+			
+			try{
+			
+				StringEntity entity = new StringEntity(json);
+				
+				post.setEntity(entity);
+				
+				post.setHeader("Content-type", "application/json");
+				
+				DefaultHttpClient client = new DefaultHttpClient();
+				
+				BasicResponseHandler handler = new BasicResponseHandler();
+				
+				String response = client.execute(post, handler);
+				
+				return response;
+			
+			}catch(UnsupportedCodingException | ... | ... e){
+			
+				Log.d("ROSS", e.toString());			
+			}		
+		}
+		
+		
+	SERVER:
+	
+		You could parse the JSON at the server, of course. 
+		Google this: "java json parser jar"
+		
+	
+	
+VIDEO #61: Fragments
+
+
+	This video adds <Fragment> to activity.xml; and, creates a fragment.xml with ImageView and TextView.
+	
+	Notes from developer.android.com/guide/components/fragments.html:
+	
+		ADD FRAGMENTS TO AN ACTIVITY:
+		
+			VIA XML:
+			
+				In activity.xml add a <fragment> view. 
+				The activity's onCreateView() inflates the activity's .xml, the <fragment android:name= "uri to fragment class*"
+				call's the fragment.java's onCreateView() for the fragment.
+				
+					*ex: com.ross.appname.RossFragment
+					
+			VIA CODE:
+			
+				The fragment is created and then added to an already existing view (a container for the fragment).
+				
+					FragmentManager fragmentManager = getFragmentManager();
+					
+					FragmentTransaction fragmentTransaction = fragementManager.beginTransaction();
+					
+						or,
+						
+							FragmentTransaction ft = getFragmentManager().beginTransaction();
+							
+					
+					MyFragment frag = new MyFragment();
+					
+					fragmentTransaction.add(R.id.id_of_container, frag);
+					
+					fragmentTransaction.commit();
+					
+					
+		GET HANDLE TO ADDED FRAGMENTS:
+		
+			1) use FragmentManager
+			2) get handle to fragment:
+			
+				findFragmentById --> only if fragment is hard coded into .xml and given a "@+id/"
+				
+				findFragmentByTag(tag) --> if programatically added fragments were given a tag when you created them 
+										(You should give programatically added frags tags if you need handles to them later).
+										
+										
+										
+		FRAGMENT TRANSACTIONS:
+		
+			1) Get a FragmentManager
+			2) Get a FragmentTransaction
+			
+				fragmentTransaction.replace(R.id....*, frag)
+				
+					*or a tag for a frag.
+					
+				fragmentTransaction.addToBackStack() --> let activity manage fragments.
+				
+				fragmentTransaction.commit();
+				
+				
+		
+VIDEO #62:
+
+	This video:
+	
+		[ ] Makes a Course bean with imageId, title, and description.
+		
+		[ ] Makes a CourseList that extends ArrayList, the constructor creates 4 new Course objects
+			and adds them to the array.
+			
+		[ ] Makes the fragment CourseListFragment that extends ListFragment.
+		
+			Generic:
+		
+				Uses an ArrayAdapter<Course> adapter = new ArrayAdapter(context, layout**, list);
+				
+					**Note: Video #63 creates a custom layout.
+					
+				An ArrayAdapter shows the .toString() of the objects in the collection.
+				
+				.setListAdapter(adapter);
+				
+				Implement .onListItemClick(Listview lv, View v, int position, long id){
+				
+					...
+					
+					Course c = courses.get(position);
+					
+					...
+				}
+				
+				
+				
+VIDEO #63: Creates a custom .xml for CourseListFragment, used in the ArrayAdapter for Video #62.
+
+
+
+VIDEO #64: Fragment Communication
+
+
+	Make fragments communicate through the controlling activity, using Observer Pattern. This is MVC architecture.
+	
+	[ ] Changes made to Video #62 code:
+	
+		Get handle to fragments in activity's onCreate():
+		
+			findFragmentById;
+			
+			CourseListFragment courseListFragment = (CourseListFragment)getFragmentManager().findFragmentById(R.id....);
+			
+			ArrayAdapter<Course> adapter = new ArrayAdapter<Course>(this, layout, collection);
+			
+			courseListFragment.setListAdapter(adapter);
+			
+			
+		Note: Fragments are still hard coded into activity's .xml.
+		
+		
+	OBSERVER PATTERN:
+	
+
+	
+		CourseListFragment:
+		
+			[ ] Define interface
+		
+				public Interface MyInterface{
+				
+					public void interfaceMethod(...);
+				
+				}
+				
+				
+			[ ] Define interface variable
+			
+				private MyInterface listener;
+				
+				
+			[ ] Set interface variable
+			
+				setListener(MyInterface activity_that_implements_the_interface){
+				
+					this.listener = activity_that_implements_the_interface;
+				}
+			
+			
+			[ ] Call listener
+			
+				if(listener!=null){
+				
+					listener.interfaceMethod(position);
+				}
+		
+
+		MainActivity:
+		
+			Two techniques:
+			
+			1) Implement the class:
+			
+					MainActivity implements MyInterface....{
+					
+						@override
+						public void interfaceMethod(...);					
+					}
+			
+			
+			2) Anonymous class:
+			
+				
+					courseListFragment.setListener(new CourseListFragment.MyInterface(){
+					
+						@override
+						public void interfaceMethod(int position){
+						
+							Course c = courseList.get(position);
+							
+							ProductFragment.setCourse(c);
+						}
+					
+					});
+					
+					
+					
+	The video tutorial uses the Observer pattern coded as shown above. On developer.android.com they have the
+	activity us a "setListener()" method, instead the fragment uses its onAttach() method to see if the
+	activity that created it has implemented the interface method:
+	
+	
+		Fragment making sure invoking activity is of MyInterface type:
+		
+			public void onAttach(Activity activity){
+			
+				super.onAttach(activity);
+				
+				Try{ mListener = (MyInterface)activity; }
+				Catch(ClassCastException e){ 
+				
+					throw new ClassCastException(activity.toString() + "must implement MyInterface.");
+				}			
+			}
+			
+			
+		OR, from my memory, something like this:
+		
+			public void onAttach(Activity activity){
+			
+				super.onAttach(activity);
+				
+				if(activity.instanceOf(MyInterface)){
+				
+					mListener = (MyInterface)activity;
+				}
+			}
+			
+			
+			
+VIDEO #65: (my version)
+
+	Using newInstance static method, StackOverflow: 
+		http://stackoverflow.com/questions/9245408/best-practice-for-instantiating-a-new-android-fragment
+		
+	GSON: (a Google API) https://code.google.com/p/google-gson/
+	
+		"Gson is a Java library that can be used to convert Java Objects into their JSON representation. 
+		It can also be used to convert a JSON string to an equivalent Java object. Gson can work with 
+		arbitrary Java objects including pre-existing objects that you do not have source-code of."
+		
+		"Provide simple toJson() and fromJson() methods to convert Java objects to JSON and vice-versa."
+
+	See the list on the device --> click item in list --> show Object of that item --> back to List
+	
+	
+	onListItemClick
+	
+		call listener
+		
+			Listener create productFragment & pass it a Course object.
+			
+			ProductFragment pf = ProductFragment.newInstance(course);
+			
+			FragmentTransaction ft = getFragmentManager().beginTransaction(). --> then ft.add or ft.replace --> and then .addToBackStack(null);
+			
+			
+	ProductFragment:
+	
+		public static ProductFragment newInstance(Course course){
+		
+			ProductFragment pf = new ProductFragment();
+			
+			Bundle b = new Bundle();
+			
+				option 1: b.putSerializable...
+				
+				option 2: b.putString("name", course.getName());
+				
+						...and repeate for each field of the Course object.
+				
+				option 3: use GSON:
+				
+					GSON gson = new Gson();
+					
+					String json = gson.toJson(course);
+					
+					b.putString("json", json);
+					
+					***
+					
+			
+			pf.setArguments(b);
+			
+			return pf;		
+		}
+			
+		
+			***Later on get object:
+			
+				String json = getArguments().getString("json", null);
+			
+				Course course = gson.fromJson(json, Course.class);
+
+				
+				
+VIDEO #65:
+
+
+	[ ] John removed the ProductFragment from the activity's .xml.
+	
+		This means the code in the anonymous interface implementation needs to change.
+		
+		
+	A list click invokes the onListItemClick(), which in turn invokes the listener**.interfaceMethod().
+	
+			**Note: a private variable of the fragment.
+			
+			
+	The handler method in the activity is now doing:
+	
+		
+		courseListFragment.setListener( new CourseListFragment.MyInterface(){
+		
+			public void interfaceMethod(int position){
+			
+				Course course = courseList.get(position);
+				
+				ProductFragment pf = new ProductFragment(course);
+				
+				FragmentTransaction ft = getFragmentManager().beginTransaction();
+				
+				ft.replace(R.id...., pf);
+				
+				ft.addToBackstack(null);
+				
+				ft.commit();			
+			}		
+		});
+		
+		
+		
+	The above uses a Fragment constructor that takes a Course object as an argument. The below
+	uses a static method to create the Fragment. This is how Android code shows doing it:
+		
+		courseListFragment.setListener( new CourseListFragment.MyInterface(){
+		
+			public void interfaceMethod(int position){
+			
+				ProductFragment pf = ProductFragment.newInstance(courseList.get(position));
+				
+				...			
+			}
+		});
+		
+		
+		WHEN YOU DON'T USE THE ABOVE YOU DO SOMETHING LIKE:
+		
+			public class ProductFragment...{
+			
+				private Course course;
+				
+				public ProductFragment(Course course){
+				
+					this.course = course;
+				}
+				
+				public View onCreateView(...){
+				
+					View view = inflater.inlate(R.layout.product_xml, container, false);
+					
+					if(course != null){
+						
+						setCourse(course, view);
+					}
+					
+					return view;
+				}
+				
+				public void setCourse(Course course){
+				
+					View view = getView();
+					
+					setCourse(course, view);
+				}
+				
+				private void setCourse(Course course, View view){
+				
+					ImageView iv = (ImageView)view.findViewById...;
+					
+					TextView title = (TextView)...;
+					
+					TextView description = ...;
+					
+					Drawable drawable = getResources().getDrawable...;
+					
+					title.setText(course.getTitle());
+					
+					description.setText(course.getDescription());
+					
+					iv.setImageDrawable(drawable);
+				}	
+			}
+			
+		
+			BUT THERE IS NO NEED FOR:
+				- private Course course;
+				- public ProductFragment(Course course);
+				- public void setCourse(Course course);
+				or
+				- public void SetCourse(Course course, View view);
+				
+				
+			JUST USE:
+			
+				ProductFragment pf = ProductFragment.newInstance(courseList.get(position));
+				
+				The static method that creates a ProductFragment, it sets a Course
+				object into a bundle and attaches the bundle to the fragment when it is created.
+				Now any time you need the Course object get it from the bundle:
+				use getArguments() to get the Course object.
+			
+				
+
+		
+											
+		
